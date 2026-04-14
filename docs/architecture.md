@@ -1,6 +1,5 @@
 # Architecture Diagram - Day 1
 
-Use this file directly for screenshots in VS Code preview or GitHub preview.
 
 ## High-Level Flow
 
