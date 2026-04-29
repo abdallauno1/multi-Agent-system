@@ -127,13 +127,4 @@ curl -X POST http://127.0.0.1:8000/runs \
 2. `docs/architecture.md`
 3. Swagger UI or `POST /runs` JSON output
 
-## GitHub push
 
-```bash
-git init
-git branch -M main
-git add .
-git commit -m "feat: day2 event-driven runtime for multi-agent orchestrator"
-git remote add origin <YOUR_GITHUB_REPO_URL>
-git push -u origin main
-```
