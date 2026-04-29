@@ -28,6 +28,15 @@ class ValidationResult(BaseModel):
     reason: str
 
 
+class RunEvent(BaseModel):
+    event_id: str = Field(default_factory=lambda: str(uuid4()))
+    event_type: str
+    run_id: str
+    source: str
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
 class RunRecord(BaseModel):
     run_id: str = Field(default_factory=lambda: str(uuid4()))
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -38,3 +47,4 @@ class RunRecord(BaseModel):
     status: str = "created"
     result: Optional[ExecutionResult] = None
     validation: Optional[ValidationResult] = None
+    events: List[RunEvent] = Field(default_factory=list)
