@@ -1,6 +1,5 @@
 # Day 2 Docs Overview
 
-Use these files for GitHub preview screenshots and LinkedIn visuals.
 
 ## Files
 
