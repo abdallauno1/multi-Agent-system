@@ -1,130 +1,171 @@
-# Multi-Agent Orchestrator System - Day 2
+# 🚀 Multi-Agent Orchestrator System
 
-Day 2 upgrades the project from a simple orchestration loop to an **event-driven runtime** that looks much closer to a real AI platform component.
+A production-style multi-agent system evolving from a simple orchestration model (Day 1) to an event-driven architecture (Day 2).
 
-## What changed in Day 2
+---
 
-- added an **Event Bus** for internal workflow events
-- introduced explicit **event types** for plan, execution, validation, retry, and completion
-- persisted **event history** in shared memory for each run
-- upgraded the orchestrator to use **event-driven handlers**
-- added a run lookup endpoint: `GET /runs/{run_id}`
-- added extra tests for event flow and API behavior
-- added separate docs for architecture, sequence, and Day 2 LinkedIn assets
+## 🧠 Project Vision
 
-## Why this matters
+This project explores how to design and build **AI agent systems** using principles from:
 
-This is the transition from:
+- Platform Engineering
+- Distributed Systems
+- Event-Driven Architecture
+- Observability-ready design
 
-- demo-style AI orchestration
+---
 
-to:
+# 🥇 Day 1 — Core Multi-Agent System
 
-- **production-style runtime design**
-- **decoupled workflow coordination**
-- **observable agent execution**
-- **replayable event history**
+## 🔧 What was built
 
-## Architecture at a glance
+- Planner Agent → creates execution plan  
+- Executor Agent → executes tasks  
+- Validator Agent → validates results  
+- Orchestrator → manages workflow  
+- Retry loop based on validation  
+- Shared memory (basic persistence)  
+- FastAPI interface  
 
-```text
-Client -> FastAPI -> Orchestrator -> Event Bus
-                                    |-> Planner
-                                    |-> Executor
-                                    |-> Validator
-                                    |-> Shared Memory
+## 🧩 Architecture
+
+```
+Client → FastAPI → Orchestrator
+        → Planner → Executor → Validator
+        → Retry (if failed)
+        → Persist result
 ```
 
-## Project Structure
+## 🎯 Key Concepts
 
-```text
-multi-agent-orchestrator-day2/
-├── app/
-│   ├── agents/
-│   │   ├── base.py
-│   │   ├── planner.py
-│   │   ├── executor.py
-│   │   └── validator.py
-│   ├── events/
-│   │   ├── event_bus.py
-│   │   ├── event_types.py
-│   │   └── __init__.py
-│   ├── main.py
-│   ├── memory.py
-│   ├── models.py
-│   └── orchestrator.py
-├── docs/
-│   ├── architecture.md
-│   ├── overview.md
-│   ├── sequence.md
-│   └── linkedin-post-day2.md
-├── tests/
-│   ├── test_api.py
-│   └── test_orchestrator.py
-├── Dockerfile
-├── Makefile
-├── requirements.txt
-└── README.md
+- Agent orchestration  
+- Task chaining  
+- Validation-driven retry  
+- Basic system coordination  
+
+---
+
+# 🥈 Day 2 — Event-Driven Architecture
+
+## ⚡ What changed
+
+The system evolved from synchronous calls to an **event-driven model**.
+
+## 🔥 New Features
+
+- Event Bus implementation  
+- Decoupled agents  
+- Event-based communication  
+- Improved retry mechanism (event-driven)  
+- Execution history (events tracking)  
+- Enhanced shared memory  
+- New API endpoints  
+
+## 🧠 Event Flow
+
+```
+Orchestrator → Event Bus → Agents
 ```
 
-## Quick Start
+Events:
+
+- PLAN_CREATED  
+- TASK_EXECUTE  
+- TASK_COMPLETED  
+- VALIDATION_REQUEST  
+- VALIDATION_PASSED  
+- VALIDATION_FAILED  
+- RUN_COMPLETED  
+
+## 🧩 Architecture (Day 2)
+
+```
+Client → FastAPI → Orchestrator
+            ↓
+        Event Bus
+   ↙        ↓        ↘
+Planner   Executor   Validator
+            ↓
+        Shared Memory
+```
+
+## 🎯 Key Improvements
+
+- Decoupled system design  
+- More scalable architecture  
+- Closer to real distributed systems  
+- Event-driven retry logic  
+
+---
+
+# 🛠️ Tech Stack
+
+- Python  
+- FastAPI  
+- Event-driven architecture (custom EventBus)  
+- JSON-based persistence  
+
+---
+
+# ▶️ How to Run
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+
 uvicorn app.main:app --reload
 ```
 
 Open:
 
-- API docs: `http://127.0.0.1:8000/docs`
-- Health: `http://127.0.0.1:8000/health`
-- Runs: `http://127.0.0.1:8000/runs`
-
-## Example Request
-
-```bash
-curl -X POST http://127.0.0.1:8000/runs \
-  -H "Content-Type: application/json" \
-  -d '{
-    "goal": "Analyze failed deployment and suggest the next action",
-    "context": {
-      "service": "payments-api",
-      "environment": "staging",
-      "error": "CrashLoopBackOff"
-    }
-  }'
+```
+http://127.0.0.1:8000/docs
 ```
 
-## Example Response
+---
+
+# 📸 Diagrams
+
+- docs/architecture.md  
+- docs/sequence.md  
+
+---
+
+# 🧪 Example Request
 
 ```json
+POST /runs
 {
-  "run_id": "...",
-  "status": "completed",
-  "attempts": 1,
-  "plan": [
-    "Understand the goal and available context",
-    "Incorporate runtime context into the execution strategy",
-    "Execute the main action for the goal",
-    "Validate the execution result"
-  ],
-  "events": [
-    {"event_type": "PLAN_CREATED", "source": "planner"},
-    {"event_type": "TASK_EXECUTE", "source": "orchestrator"},
-    {"event_type": "TASK_COMPLETED", "source": "executor"},
-    {"event_type": "VALIDATION_REQUEST", "source": "orchestrator"},
-    {"event_type": "VALIDATION_PASSED", "source": "validator"},
-    {"event_type": "RUN_COMPLETED", "source": "orchestrator"}
-  ]
+  "goal": "analyze logs"
 }
 ```
 
-## Suggested screenshots for Day 2 LinkedIn post
+---
 
-1. `docs/sequence.md`
-2. `docs/architecture.md`
-3. Swagger UI or `POST /runs` JSON output
+# 📈 Roadmap
 
+## 🔜 Day 3 (next)
 
+- Kubernetes deployment  
+- Observability (Prometheus + Grafana)  
+- Logging & tracing  
+- Production-ready improvements  
+
+---
+
+# 💡 Why this project
+
+This is not a simple AI demo.
+
+The goal is to build a **realistic AI platform system**, combining:
+
+- AI Agents  
+- Platform Engineering  
+- Distributed Systems  
+
+---
+
+# ⭐ Author
+
+Built as part of a hands-on journey into AI Platform Engineering.
