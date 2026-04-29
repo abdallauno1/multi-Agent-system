@@ -1,6 +1,6 @@
 # Sequence Diagram - Day 2
 
-Use this as the first LinkedIn screenshot.
+
 
 ```mermaid
 sequenceDiagram
