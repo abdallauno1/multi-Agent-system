@@ -1,80 +1,35 @@
-# Architecture Diagram - Day 1
+# Architecture Diagram - Day 2
 
+Use this file for a clean GitHub or VS Code screenshot.
 
-## High-Level Flow
-
-```mermaid
-flowchart TD
-    A[Client / API Request] --> B[FastAPI Service]
-    B --> C[Orchestrator]
-    C --> D[Planner Agent]
-    D --> E[Execution Plan]
-    E --> F[Executor Agent]
-    F --> G[Execution Result]
-    G --> H[Validator Agent]
-    H --> I{Passed?}
-    I -- Yes --> J[Persist to Shared Memory]
-    I -- No --> K[Retry Loop]
-    K --> F
-    J --> L[API Response]
-```
-
-## Agent Responsibilities
+## Event-Driven Architecture
 
 ```mermaid
 flowchart LR
-    P[Planner Agent] -->|Creates steps| O[Orchestrator]
-    E[Executor Agent] -->|Executes task| O
-    V[Validator Agent] -->|Approves / rejects| O
+    U[Client / API Request] --> API[FastAPI Service]
+    API --> O[Orchestrator]
+    O --> B[Event Bus]
+    B --> P[Planner Agent]
+    B --> E[Executor Agent]
+    B --> V[Validator Agent]
+    O --> M[Shared Memory]
+    M --> R[Run History + Event Log]
+```
+
+## Agent Responsibility View
+
+```mermaid
+flowchart LR
+    P[Planner Agent] -->|creates plan events| B[Event Bus]
+    E[Executor Agent] -->|emits execution results| B
+    V[Validator Agent] -->|approves or rejects| B
+    B --> O[Orchestrator]
     O --> M[Shared Memory]
 ```
 
-## Sequence Diagram
+## Day 2 Notes
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant API as FastAPI
-    participant ORC as Orchestrator
-    participant P as Planner
-    participant E as Executor
-    participant V as Validator
-    participant MEM as Shared Memory
-
-    U->>API: POST /runs
-    API->>ORC: run(goal, context)
-    ORC->>P: create plan
-    P-->>ORC: steps
-
-    loop retry until validation passes
-        ORC->>E: execute(plan, context)
-        E-->>ORC: result
-        ORC->>V: validate(result)
-        V-->>ORC: pass/fail
-    end
-
-    ORC->>MEM: persist run record
-    ORC-->>API: completed run
-    API-->>U: JSON response
-```
-
-## Day 1 Architectural Notes
-
-- Planner, Executor, and Validator are separated to show clear role-based agents.
-- Shared memory is intentionally simple now, but can evolve to Redis, Postgres, or a vector store.
-- Retry loop is in the orchestrator to centralize control logic.
-- FastAPI gives an API-first interface and makes the project demo-friendly.
-
-## Day 2 Evolution
-
-- add async execution
-- add queue or event bus
-- add structured logging
-- add metrics endpoint
-
-## Day 3 Evolution
-
-- add Docker Compose and Kubernetes manifests
-- add Prometheus / Grafana
-- add deployment workflow
-
+- the event bus decouples workflow transitions from direct method chaining
+- each run now stores an event history for replay and debugging
+- validation failure triggers a new execution event instead of a raw loop-only flow
+- shared memory is still file-based now, but it can evolve to Redis or Postgres in Day 3

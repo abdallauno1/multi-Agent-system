@@ -1,67 +1,66 @@
-# Multi-Agent Orchestrator System - Day 1
+# Multi-Agent Orchestrator System - Day 2
 
-A production-style Day 1 foundation for a multi-agent system with:
+Day 2 upgrades the project from a simple orchestration loop to an **event-driven runtime** that looks much closer to a real AI platform component.
 
-- **Planner Agent**: converts a user goal into executable steps
-- **Executor Agent**: executes steps with retry support
-- **Validator Agent**: reviews outputs and decides pass/fail
-- **Orchestrator**: manages flow between agents
-- **Shared Memory**: simple in-memory and persisted run history
-- **FastAPI API**: endpoint to start a workflow
-- **Tests**: basic orchestration coverage
+## What changed in Day 2
 
-## Why this project
+- added an **Event Bus** for internal workflow events
+- introduced explicit **event types** for plan, execution, validation, retry, and completion
+- persisted **event history** in shared memory for each run
+- upgraded the orchestrator to use **event-driven handlers**
+- added a run lookup endpoint: `GET /runs/{run_id}`
+- added extra tests for event flow and API behavior
+- added separate docs for architecture, sequence, and Day 2 LinkedIn assets
 
-This repo is designed to look like a real platform engineering / AI systems project, not a toy chatbot. It demonstrates:
+## Why this matters
 
-- agent roles
-- task delegation
-- shared memory
-- validation loops
-- retries and fallback behavior
-- API-first architecture
+This is the transition from:
 
-## Day 1 Scope
+- demo-style AI orchestration
 
-Day 1 focuses on the **core orchestration foundation**.
+to:
 
-Done today:
+- **production-style runtime design**
+- **decoupled workflow coordination**
+- **observable agent execution**
+- **replayable event history**
 
-- project scaffold
-- FastAPI service
-- planner / executor / validator agents
-- orchestrator with retry loop
-- run memory persistence
-- architecture docs
-- GitHub-ready structure
-- LinkedIn-ready markdown diagram
+## Architecture at a glance
 
-Planned next:
-
-- **Day 2**: async tasks, queue/event support, Docker Compose, observability basics
-- **Day 3**: Kubernetes manifests, Prometheus metrics, GitHub Actions polish, demo video assets
+```text
+Client -> FastAPI -> Orchestrator -> Event Bus
+                                    |-> Planner
+                                    |-> Executor
+                                    |-> Validator
+                                    |-> Shared Memory
+```
 
 ## Project Structure
 
 ```text
-multi-agent-orchestrator-day1/
+multi-agent-orchestrator-day2/
 ├── app/
 │   ├── agents/
 │   │   ├── base.py
 │   │   ├── planner.py
 │   │   ├── executor.py
 │   │   └── validator.py
+│   ├── events/
+│   │   ├── event_bus.py
+│   │   ├── event_types.py
+│   │   └── __init__.py
 │   ├── main.py
 │   ├── memory.py
 │   ├── models.py
 │   └── orchestrator.py
 ├── docs/
 │   ├── architecture.md
-│   └── linkedin-post-day1.md
+│   ├── overview.md
+│   ├── sequence.md
+│   └── linkedin-post-day2.md
 ├── tests/
+│   ├── test_api.py
 │   └── test_orchestrator.py
-├── .github/workflows/ci.yml
-├── .gitignore
 ├── Dockerfile
 ├── Makefile
 ├── requirements.txt
@@ -81,6 +80,7 @@ Open:
 
 - API docs: `http://127.0.0.1:8000/docs`
 - Health: `http://127.0.0.1:8000/health`
+- Runs: `http://127.0.0.1:8000/runs`
 
 ## Example Request
 
@@ -106,18 +106,34 @@ curl -X POST http://127.0.0.1:8000/runs \
   "attempts": 1,
   "plan": [
     "Understand the goal and available context",
+    "Incorporate runtime context into the execution strategy",
     "Execute the main action for the goal",
     "Validate the execution result"
   ],
-  "result": {
-    "summary": "Executed task for goal: Analyze failed deployment and suggest the next action",
-    "next_action": "Inspect pod logs and recent deployment diff",
-    "confidence": 0.84
-  },
-  "validation": {
-    "passed": true,
-    "reason": "Result contains a summary and actionable next action"
-  }
+  "events": [
+    {"event_type": "PLAN_CREATED", "source": "planner"},
+    {"event_type": "TASK_EXECUTE", "source": "orchestrator"},
+    {"event_type": "TASK_COMPLETED", "source": "executor"},
+    {"event_type": "VALIDATION_REQUEST", "source": "orchestrator"},
+    {"event_type": "VALIDATION_PASSED", "source": "validator"},
+    {"event_type": "RUN_COMPLETED", "source": "orchestrator"}
+  ]
 }
 ```
-  
+
+## Suggested screenshots for Day 2 LinkedIn post
+
+1. `docs/sequence.md`
+2. `docs/architecture.md`
+3. Swagger UI or `POST /runs` JSON output
+
+## GitHub push
+
+```bash
+git init
+git branch -M main
+git add .
+git commit -m "feat: day2 event-driven runtime for multi-agent orchestrator"
+git remote add origin <YOUR_GITHUB_REPO_URL>
+git push -u origin main
+```
