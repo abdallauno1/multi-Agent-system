@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from app.models import RunRecord
 
@@ -30,3 +30,9 @@ class RunMemory:
 
     def all(self) -> List[RunRecord]:
         return self.records
+
+    def get(self, run_id: str) -> Optional[RunRecord]:
+        for record in self.records:
+            if record.run_id == run_id:
+                return record
+        return None

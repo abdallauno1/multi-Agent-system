@@ -1,171 +1,245 @@
 # 🚀 Multi-Agent Orchestrator System
 
-A production-style multi-agent system evolving from a simple orchestration model (Day 1) to an event-driven architecture (Day 2).
+A production-style multi-agent system evolving across 3 days:
+
+- **Day 1:** core multi-agent orchestration
+- **Day 2:** event-driven runtime
+- **Day 3:** Kubernetes + observability
+
+This project is focused on building an AI platform component, not a simple chatbot demo.
 
 ---
 
 ## 🧠 Project Vision
 
-This project explores how to design and build **AI agent systems** using principles from:
+Design and build a realistic AI agent runtime using concepts from:
 
+- AI Agents
 - Platform Engineering
-- Distributed Systems
 - Event-Driven Architecture
-- Observability-ready design
+- Kubernetes
+- Observability
+- SRE-style reliability patterns
 
 ---
 
 # 🥇 Day 1 — Core Multi-Agent System
 
-## 🔧 What was built
+## What was built
 
-- Planner Agent → creates execution plan  
-- Executor Agent → executes tasks  
-- Validator Agent → validates results  
-- Orchestrator → manages workflow  
-- Retry loop based on validation  
-- Shared memory (basic persistence)  
-- FastAPI interface  
+- Planner Agent creates an execution plan
+- Executor Agent executes the task
+- Validator Agent validates the result
+- Orchestrator manages the workflow
+- retry loop based on validation
+- shared memory persistence
+- FastAPI API layer
 
-## 🧩 Architecture
+## Day 1 Flow
 
+```text
+Client -> FastAPI -> Orchestrator
+        -> Planner -> Executor -> Validator
+        -> Retry if validation fails
+        -> Persist result
 ```
-Client → FastAPI → Orchestrator
-        → Planner → Executor → Validator
-        → Retry (if failed)
-        → Persist result
-```
-
-## 🎯 Key Concepts
-
-- Agent orchestration  
-- Task chaining  
-- Validation-driven retry  
-- Basic system coordination  
 
 ---
 
 # 🥈 Day 2 — Event-Driven Architecture
 
-## ⚡ What changed
+Day 2 evolved the system from direct synchronous calls to event-driven coordination.
 
-The system evolved from synchronous calls to an **event-driven model**.
+## What changed
 
-## 🔥 New Features
+- Event Bus implementation
+- explicit event types
+- decoupled agents
+- event-based retry flow
+- event history stored for every run
+- run lookup endpoint: `GET /runs/{run_id}`
 
-- Event Bus implementation  
-- Decoupled agents  
-- Event-based communication  
-- Improved retry mechanism (event-driven)  
-- Execution history (events tracking)  
-- Enhanced shared memory  
-- New API endpoints  
+## Events
 
-## 🧠 Event Flow
+- `PLAN_CREATED`
+- `TASK_EXECUTE`
+- `TASK_COMPLETED`
+- `VALIDATION_REQUEST`
+- `VALIDATION_PASSED`
+- `VALIDATION_FAILED`
+- `RUN_COMPLETED`
+- `RUN_FAILED`
 
-```
-Orchestrator → Event Bus → Agents
-```
+## Day 2 Flow
 
-Events:
-
-- PLAN_CREATED  
-- TASK_EXECUTE  
-- TASK_COMPLETED  
-- VALIDATION_REQUEST  
-- VALIDATION_PASSED  
-- VALIDATION_FAILED  
-- RUN_COMPLETED  
-
-## 🧩 Architecture (Day 2)
-
-```
-Client → FastAPI → Orchestrator
-            ↓
-        Event Bus
-   ↙        ↓        ↘
-Planner   Executor   Validator
-            ↓
-        Shared Memory
+```text
+Client -> FastAPI -> Orchestrator -> Event Bus
+                                    |-> Planner
+                                    |-> Executor
+                                    |-> Validator
+                                    |-> Shared Memory
 ```
 
-## 🎯 Key Improvements
+---
 
-- Decoupled system design  
-- More scalable architecture  
-- Closer to real distributed systems  
-- Event-driven retry logic  
+# 🥉 Day 3 — Kubernetes + Observability
+
+Day 3 turns the event-driven runtime into a production-style platform component.
+
+## What was added
+
+- Docker runtime
+- Docker Compose stack
+- Prometheus metrics endpoint: `/metrics`
+- Grafana dashboard provisioning
+- Kubernetes manifests
+- readiness endpoint: `/ready`
+- liveness endpoint: `/health`
+- structured JSON logs
+- observability tests
+
+## Metrics
+
+The API exposes Prometheus metrics for:
+
+- total runs by status
+- total events by event type and source
+- agent execution latency
+- end-to-end run duration
+- active runs
 
 ---
 
 # 🛠️ Tech Stack
 
-- Python  
-- FastAPI  
-- Event-driven architecture (custom EventBus)  
-- JSON-based persistence  
+- Python
+- FastAPI
+- Pydantic
+- Prometheus client
+- Grafana
+- Docker
+- Kubernetes
+- Pytest
 
 ---
 
-# ▶️ How to Run
+# ▶️ Run Locally
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-
 uvicorn app.main:app --reload
 ```
 
 Open:
 
+- API docs: `http://127.0.0.1:8000/docs`
+- Health: `http://127.0.0.1:8000/health`
+- Ready: `http://127.0.0.1:8000/ready`
+- Metrics: `http://127.0.0.1:8000/metrics`
+
+---
+
+# 🐳 Run with Docker Compose
+
+```bash
+docker compose up --build
 ```
-http://127.0.0.1:8000/docs
+
+Open:
+
+- API: `http://localhost:8000/docs`
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000`
+
+Grafana login:
+
+- username: `admin`
+- password: `admin`
+
+---
+
+# ☸️ Deploy to Kubernetes
+
+Build the local image:
+
+```bash
+docker build -t multi-agent-orchestrator:day3 .
+```
+
+Apply manifests:
+
+```bash
+kubectl apply -k k8s/
+```
+
+Check resources:
+
+```bash
+kubectl get all -n multi-agent-system
+```
+
+Port-forward:
+
+```bash
+kubectl port-forward svc/multi-agent-orchestrator -n multi-agent-system 8000:80
+```
+
+Open:
+
+```text
+http://localhost:8000/docs
 ```
 
 ---
 
-# 📸 Diagrams
+# 🧪 Tests
 
-- docs/architecture.md  
-- docs/sequence.md  
+```bash
+pytest
+```
 
----
+
+
+
 
 # 🧪 Example Request
 
-```json
-POST /runs
-{
-  "goal": "analyze logs"
-}
+```bash
+curl -X POST http://127.0.0.1:8000/runs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "goal": "Review production incident and propose a mitigation plan",
+    "context": {
+      "service": "orders-api",
+      "environment": "prod"
+    }
+  }'
 ```
 
 ---
 
 # 📈 Roadmap
 
-## 🔜 Day 3 (next)
+Next improvements:
 
-- Kubernetes deployment  
-- Observability (Prometheus + Grafana)  
-- Logging & tracing  
-- Production-ready improvements  
+- Helm chart
+- OpenTelemetry tracing
+- Redis or Kafka-backed event bus
+- persistent storage
+- CI/CD deployment pipeline
 
 ---
 
 # 💡 Why this project
 
-This is not a simple AI demo.
+This project demonstrates how AI agents can be treated as platform workloads:
 
-The goal is to build a **realistic AI platform system**, combining:
+- orchestrated
+- event-driven
+- observable
+- deployable
+- testable
 
-- AI Agents  
-- Platform Engineering  
-- Distributed Systems  
-
----
-
-# ⭐ Author
-
-Built as part of a hands-on journey into AI Platform Engineering.
+The goal is to move from AI demos to real AI Platform Engineering.

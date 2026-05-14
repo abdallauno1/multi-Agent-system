@@ -19,14 +19,17 @@ class ExecutorAgent(BaseAgent):
         error = context.get("error")
 
         next_action = "Break the goal into smaller operational checks"
+        confidence = 0.64 if attempt == 1 and not error else 0.84
         if error:
             next_action = f"Inspect logs for {service} in {environment} and compare with latest deployment changes"
+        elif attempt > 1:
+            next_action = f"Review telemetry and rollback signals for {service} in {environment}"
 
         return {
             "agent": self.name,
             "summary": f"Executed task for goal: {goal}",
             "next_action": next_action,
-            "confidence": 0.74 if attempt == 1 else 0.84,
+            "confidence": confidence,
             "details": {
                 "service": service,
                 "environment": environment,

@@ -5,19 +5,28 @@ from typing import Any, Dict
 from app.agents.base import BaseAgent
 
 
-class ValidatorAgent:
-    def run(self, payload):
-        attempt = payload.get("attempt", 1)
+class ValidatorAgent(BaseAgent):
+    def __init__(self) -> None:
+        super().__init__(name="validator")
 
-        # forza fallimento al primo tentativo
-        if attempt == 1:
-            return {
-                "passed": False,
-                "reason": "Initial attempt not sufficient"
-            }
+    def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        summary = payload.get("summary", "")
+        next_action = payload.get("next_action", "")
+        confidence = float(payload.get("confidence", 0.0))
+        attempt = int(payload.get("attempt", 1))
 
-        # secondo tentativo passa
+        passed = bool(summary and next_action and confidence >= 0.70)
+        if attempt == 1 and confidence < 0.70:
+            passed = False
+
+        reason = (
+            "Result contains a summary and actionable next action"
+            if passed
+            else "Result is incomplete or confidence is too low; retry required"
+        )
+
         return {
-            "passed": True,
-            "reason": "Result is acceptable"
+            "agent": self.name,
+            "passed": passed,
+            "reason": reason,
         }

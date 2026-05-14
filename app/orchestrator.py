@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import time
+
 from app.agents.executor import ExecutorAgent
 from app.agents.planner import PlannerAgent
 from app.agents.validator import ValidatorAgent
-from app.events.event_bus import EventBus
 from app.events import event_types as et
+from app.events.event_bus import EventBus
 from app.memory import RunMemory
 from app.models import ExecutionResult, RunEvent, RunRecord, RunRequest, ValidationResult
+from app.observability import ACTIVE_RUNS, EVENTS_TOTAL, RUN_DURATION_SECONDS, RUNS_TOTAL, log_event, track_agent_latency
 
 
 class MultiAgentOrchestrator:
@@ -31,12 +34,21 @@ class MultiAgentOrchestrator:
     def _publish(self, event_type: str, payload: dict, source: str) -> RunEvent:
         if self._current_record is None:
             raise RuntimeError("Cannot publish without an active run record")
-        return self.bus.publish(
+
+        event = self.bus.publish(
             event_type,
             payload,
             run_id=self._current_record.run_id,
             source=source,
         )
+        EVENTS_TOTAL.labels(event_type=event_type, source=source).inc()
+        log_event(
+            "event_published",
+            run_id=self._current_record.run_id,
+            event_type=event_type,
+            source=source,
+        )
+        return event
 
     def _persist_current_record(self) -> None:
         if self._current_record is None:
@@ -45,23 +57,33 @@ class MultiAgentOrchestrator:
         self.memory.add(self._current_record)
 
     def run(self, request: RunRequest) -> RunRecord:
+        start = time.perf_counter()
+        ACTIVE_RUNS.inc()
         self.bus.reset()
         self._current_record = RunRecord(goal=request.goal, context=request.context, status="planning")
+        log_event("run_started", run_id=self._current_record.run_id, goal=request.goal)
 
-        plan_output = self.planner.run({"goal": request.goal, "context": request.context})
-        self._publish(et.PLAN_CREATED, plan_output, source="planner")
+        try:
+            with track_agent_latency("planner"):
+                plan_output = self.planner.run({"goal": request.goal, "context": request.context})
+            self._publish(et.PLAN_CREATED, plan_output, source="planner")
 
-        record = self._current_record
-        if record is None:
-            raise RuntimeError("Run record unexpectedly missing")
-        if record.status not in {"completed", "failed"}:
-            record.status = "failed"
-            record.validation = ValidationResult(
-                passed=False,
-                reason="Run exited without reaching a terminal event",
-            )
-            self._persist_current_record()
-        return record
+            record = self._current_record
+            if record is None:
+                raise RuntimeError("Run record unexpectedly missing")
+            if record.status not in {"completed", "failed"}:
+                record.status = "failed"
+                record.validation = ValidationResult(
+                    passed=False,
+                    reason="Run exited without reaching a terminal event",
+                )
+                self._persist_current_record()
+            RUNS_TOTAL.labels(status=record.status).inc()
+            log_event("run_finished", run_id=record.run_id, status=record.status, attempts=record.attempts)
+            return record
+        finally:
+            ACTIVE_RUNS.dec()
+            RUN_DURATION_SECONDS.observe(time.perf_counter() - start)
 
     def _on_plan_created(self, event: RunEvent) -> None:
         assert self._current_record is not None
@@ -82,7 +104,8 @@ class MultiAgentOrchestrator:
         assert self._current_record is not None
         self._current_record.status = "executing"
         self._current_record.attempts = int(event.payload.get("attempt", 1))
-        execution_output = self.executor.run(event.payload)
+        with track_agent_latency("executor"):
+            execution_output = self.executor.run(event.payload)
         self._publish(et.TASK_COMPLETED, execution_output, source="executor")
 
     def _on_task_completed(self, event: RunEvent) -> None:
@@ -104,7 +127,8 @@ class MultiAgentOrchestrator:
         )
 
     def _on_validation_request(self, event: RunEvent) -> None:
-        validation_output = self.validator.run(event.payload)
+        with track_agent_latency("validator"):
+            validation_output = self.validator.run(event.payload)
         event_type = et.VALIDATION_PASSED if validation_output["passed"] else et.VALIDATION_FAILED
         self._publish(event_type, validation_output, source="validator")
 

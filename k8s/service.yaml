@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: multi-agent-orchestrator
+  namespace: multi-agent-system
+  labels:
+    app: multi-agent-orchestrator
+spec:
+  selector:
+    app: multi-agent-orchestrator
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+  type: ClusterIP

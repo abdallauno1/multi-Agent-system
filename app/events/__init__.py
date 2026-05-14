@@ -1,1 +1,3 @@
-# package marker
+from app.events.event_bus import EventBus
+
+__all__ = ["EventBus"]
