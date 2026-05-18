@@ -1,10 +1,11 @@
 # 🚀 Multi-Agent Orchestrator System
 
-A production-style multi-agent system evolving across 3 days:
+A production-style multi-agent system evolving across 4 days:
 
 - **Day 1:** core multi-agent orchestration
 - **Day 2:** event-driven runtime
 - **Day 3:** Kubernetes + observability
+- **Day 4:** LLM-powered agents with provider abstraction
 
 This project is focused on building an AI platform component, not a simple chatbot demo.
 
@@ -15,6 +16,7 @@ This project is focused on building an AI platform component, not a simple chatb
 Design and build a realistic AI agent runtime using concepts from:
 
 - AI Agents
+- LLM-powered reasoning
 - Platform Engineering
 - Event-Driven Architecture
 - Kubernetes
@@ -110,11 +112,46 @@ The API exposes Prometheus metrics for:
 
 ---
 
+# 🏁 Day 4 — LLM-Powered Agents
+
+Day 4 upgrades the agents from deterministic logic to an LLM-powered design while keeping the project safe for local development and CI.
+
+## What was added
+
+- LLM provider abstraction
+- mock provider for deterministic local execution
+- OpenAI-compatible provider support
+- Ollama provider support for local LLMs
+- prompt templates for Planner, Executor, and Validator
+- LLM-generated planning
+- LLM-assisted execution output
+- LLM-based validation and retry decision
+
+## Provider Modes
+
+```text
+LLM_PROVIDER=mock    -> deterministic local behavior, CI-safe
+LLM_PROVIDER=openai  -> OpenAI-compatible chat completions API
+LLM_PROVIDER=ollama  -> local Ollama model via /api/generate
+```
+
+Default mode:
+
+```bash
+LLM_PROVIDER=mock
+```
+
+This means the project runs without external API keys by default.
+
+---
+
 # 🛠️ Tech Stack
 
 - Python
 - FastAPI
 - Pydantic
+- Custom Event Bus
+- LLM provider abstraction
 - Prometheus client
 - Grafana
 - Docker
@@ -138,6 +175,28 @@ Open:
 - Health: `http://127.0.0.1:8000/health`
 - Ready: `http://127.0.0.1:8000/ready`
 - Metrics: `http://127.0.0.1:8000/metrics`
+
+---
+
+# 🤖 Run with OpenAI-compatible LLM
+
+```bash
+export LLM_PROVIDER=openai
+export OPENAI_API_KEY="your-key"
+export OPENAI_MODEL="gpt-4o-mini"
+uvicorn app.main:app --reload
+```
+
+---
+
+# 🦙 Run with Ollama
+
+```bash
+ollama run llama3.1
+export LLM_PROVIDER=ollama
+export OLLAMA_MODEL=llama3.1
+uvicorn app.main:app --reload
+```
 
 ---
 
@@ -165,7 +224,7 @@ Grafana login:
 Build the local image:
 
 ```bash
-docker build -t multi-agent-orchestrator:day3 .
+docker build -t multi-agent-orchestrator:day4 .
 ```
 
 Apply manifests:
@@ -200,9 +259,30 @@ http://localhost:8000/docs
 pytest
 ```
 
+Current test coverage includes:
 
+- API behavior
+- orchestration and retry logic
+- event history persistence
+- observability endpoints
+- LLM-powered agent behavior with mock provider
 
+---
 
+# 📸 Diagrams and LinkedIn Assets
+
+- `docs/architecture.md`
+- `docs/sequence.md`
+- `docs/day3-observability.md`
+- `docs/sequence-day3.md`
+- `docs/day4-llm-agents.md`
+- `docs/sequence-day4.md`
+- `docs/linkedin-post-day1.md`
+- `docs/linkedin-post-day2.md`
+- `docs/linkedin-post-day3.md`
+- `docs/linkedin-post-day4.md`
+
+---
 
 # 🧪 Example Request
 
@@ -220,15 +300,15 @@ curl -X POST http://127.0.0.1:8000/runs \
 
 ---
 
-# 📈 Roadmap
-
-Next improvements:
+# 📈 Future Improvements
 
 - Helm chart
 - OpenTelemetry tracing
 - Redis or Kafka-backed event bus
 - persistent storage
 - CI/CD deployment pipeline
+- real tool execution layer
+- authentication and authorization
 
 ---
 
@@ -238,6 +318,7 @@ This project demonstrates how AI agents can be treated as platform workloads:
 
 - orchestrated
 - event-driven
+- LLM-powered
 - observable
 - deployable
 - testable

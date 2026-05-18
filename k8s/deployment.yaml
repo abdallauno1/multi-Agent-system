@@ -21,11 +21,18 @@ spec:
     spec:
       containers:
         - name: api
-          image: multi-agent-orchestrator:day3
+          image: multi-agent-orchestrator:day4
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
               name: http
+          env:
+            - name: LLM_PROVIDER
+              value: "mock"
+            - name: OPENAI_MODEL
+              value: "gpt-4o-mini"
+            - name: OLLAMA_MODEL
+              value: "llama3.1"
           readinessProbe:
             httpGet:
               path: /ready

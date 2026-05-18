@@ -11,7 +11,7 @@ run:
 	uvicorn app.main:app --reload
 
 docker-build:
-	docker build -t multi-agent-orchestrator:day3 .
+	docker build -t multi-agent-orchestrator:day4 .
 
 compose-up:
 	docker compose up --build

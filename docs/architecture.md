@@ -1,5 +1,6 @@
 # Architecture Diagram - Day 2
 
+Use this file for a clean GitHub or VS Code screenshot.
 
 ## Event-Driven Architecture
 
